@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{fragments/layout :: head('Dashboard')}"></head>
+<body>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+
+    <main class="content">
+        <!-- Cabecalho -->
+        <header class="page-header">
+            <div>
+                <h1 class="h4 mb-0">Dashboard administrativo</h1>
+                <p class="text-secondary small mb-0">
+                    Chamados técnicos ·
+                    <span th:text="${#numbers.formatInteger(totalClientes, 1, 'POINT')} + ' clientes cadastrados'">1.500 clientes cadastrados</span>
+                </p>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <span class="small text-secondary" aria-live="polite">
+                    Atualizado <span id="ultimaAtualizacao">—</span>
+                </span>
+                <div class="form-check form-switch mb-0">
+                    <input class="form-check-input" type="checkbox" id="autoRefresh" checked>
+                    <label class="form-check-label small" for="autoRefresh">Auto (60s)</label>
+                </div>
+                <button class="btn btn-sm btn-outline-secondary" id="btnAtualizar" type="button">
+                    <i class="bi bi-arrow-clockwise"></i> Atualizar
+                </button>
+            </div>
+        </header>
+
+        <!-- RF05: filtros (opcoes renderizadas pelo Thymeleaf) -->
+        <form id="filtros" class="filter-bar" autocomplete="off">
+            <div class="btn-group btn-group-sm" role="group" aria-label="Período rápido" id="presets">
+                <button type="button" class="btn btn-outline-secondary" data-dias="7">7 dias</button>
+                <button type="button" class="btn btn-outline-secondary" data-dias="30">30 dias</button>
+                <button type="button" class="btn btn-outline-secondary active" data-dias="90">90 dias</button>
+                <button type="button" class="btn btn-outline-secondary" data-dias="365">12 meses</button>
+            </div>
+            <label class="filter-field">De
+                <input type="date" name="inicio" class="form-control form-control-sm"
+                       th:min="${opcoes.dataMinima()}" th:max="${opcoes.dataMaxima()}">
+            </label>
+            <label class="filter-field">Até
+                <input type="date" name="fim" class="form-control form-control-sm"
+                       th:min="${opcoes.dataMinima()}" th:max="${opcoes.dataMaxima()}">
+            </label>
+            <label class="filter-field">Status
+                <select name="status" class="form-select form-select-sm">
+                    <option value="">Todos</option>
+                    <option th:each="s : ${opcoes.status()}" th:value="${s.valor()}" th:text="${s.rotulo()}">Aberto</option>
+                </select>
+            </label>
+            <label class="filter-field">Tipo
+                <select name="tipo" class="form-select form-select-sm">
+                    <option value="">Todos</option>
+                    <option th:each="t : ${opcoes.tipos()}" th:value="${t}" th:text="${t}">Hardware</option>
+                </select>
+            </label>
+            <label class="filter-field">Prioridade
+                <select name="prioridade" class="form-select form-select-sm">
+                    <option value="">Todas</option>
+                    <option th:each="p : ${opcoes.prioridades()}" th:value="${p.valor()}" th:text="${p.rotulo()}">Alta</option>
+                </select>
+            </label>
+            <label class="filter-field">Técnico
+                <select name="tecnico" class="form-select form-select-sm">
+                    <option value="">Todos</option>
+                    <option th:each="t : ${opcoes.tecnicos()}" th:value="${t}" th:text="${t}">Ana Silva</option>
+                </select>
+            </label>
+            <label class="filter-field">Setor
+                <select name="setor" class="form-select form-select-sm">
+                    <option value="">Todos</option>
+                    <option th:each="s : ${opcoes.setores()}" th:value="${s}" th:text="${s}">Financeiro</option>
+                </select>
+            </label>
+            <label class="filter-field">Agrupar por
+                <select name="granularidade" class="form-select form-select-sm">
+                    <option value="AUTO">Automático</option>
+                    <option value="DIA">Dia</option>
+                    <option value="SEMANA">Semana</option>
+                    <option value="MES">Mês</option>
+                </select>
+            </label>
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-sm btn-primary">Aplicar</button>
+                <button type="button" class="btn btn-sm btn-link" id="btnLimpar">Limpar</button>
+            </div>
+        </form>
+
+        <div id="alerta" class="alert alert-danger d-none" role="alert"></div>
+
+        <!-- RF01: indicadores -->
+        <section class="kpi-grid" aria-label="Indicadores gerais">
+            <div class="kpi">
+                <div class="kpi-label">Abertos no período</div>
+                <div class="kpi-value" id="kpiTotal">—</div>
+                <div class="kpi-sub" id="kpiVariacao">&nbsp;</div>
+            </div>
+            <div class="kpi">
+                <div class="kpi-label">Atendidos no período</div>
+                <div class="kpi-value" id="kpiAtendidos">—</div>
+                <div class="kpi-sub">resolvidos + fechados</div>
+            </div>
+            <div class="kpi">
+                <div class="kpi-label">Backlog (em aberto)</div>
+                <div class="kpi-value" id="kpiBacklog">—</div>
+                <div class="kpi-sub" id="kpiBacklogDet">&nbsp;</div>
+            </div>
+            <div class="kpi">
+                <div class="kpi-label"><i class="bi bi-exclamation-octagon-fill text-critical"></i> SLA vencido</div>
+                <div class="kpi-value" id="kpiAtrasados">—</div>
+                <div class="kpi-sub">em aberto e fora do prazo</div>
+            </div>
+            <div class="kpi">
+                <div class="kpi-label">SLA cumprido</div>
+                <div class="kpi-value" id="kpiSla">—</div>
+                <div class="kpi-sub">dos atendidos no período</div>
+            </div>
+            <div class="kpi">
+                <div class="kpi-label">Tempo médio de resolução</div>
+                <div class="kpi-value" id="kpiTempo">—</div>
+                <div class="kpi-sub" id="kpiAvaliacao">&nbsp;</div>
+            </div>
+        </section>
+
+        <!-- RF02 + RF03 -->
+        <section class="grid-2-1">
+            <article class="card-viz">
+                <header class="card-viz-header">
+                    <div>
+                        <h2>Chamados abertos × atendidos</h2>
+                        <p id="serieSub">Por período</p>
+                    </div>
+                    <button class="btn btn-sm btn-link" type="button" data-tabela="tabSerie">Ver tabela</button>
+                </header>
+                <div class="chart-box chart-lg"><canvas id="chartSerie" aria-label="Gráfico de chamados abertos e atendidos por período"></canvas></div>
+                <div class="tabela-dados d-none" id="tabSerie"></div>
+            </article>
+            <article class="card-viz">
+                <header class="card-viz-header">
+                    <div>
+                        <h2>Situação dos chamados</h2>
+                        <p>Chamados abertos no período, por status atual</p>
+                    </div>
+                    <button class="btn btn-sm btn-link" type="button" data-tabela="tabStatus">Ver tabela</button>
+                </header>
+                <div class="chart-box chart-lg"><canvas id="chartStatus" aria-label="Gráfico de chamados por status"></canvas></div>
+                <div class="tabela-dados d-none" id="tabStatus"></div>
+            </article>
+        </section>
+
+        <!-- RF04 -->
+        <section class="grid-1-1">
+            <article class="card-viz">
+                <header class="card-viz-header">
+                    <div>
+                        <h2>Tipos de chamado mais atendidos</h2>
+                        <p>Volume no período, com tempo médio e SLA</p>
+                    </div>
+                </header>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle ranking" id="rankTipos">
+                        <thead><tr><th>#</th><th>Tipo</th><th class="w-40">Volume</th><th class="text-end">Tempo médio</th><th class="text-end">SLA</th></tr></thead>
+                        <tbody><tr><td colspan="5" class="text-secondary">Carregando…</td></tr></tbody>
+                    </table>
+                </div>
+            </article>
+            <article class="card-viz">
+                <header class="card-viz-header">
+                    <div>
+                        <h2>Técnicos com mais atendimentos</h2>
+                        <p>Chamados resolvidos/fechados no período</p>
+                    </div>
+                </header>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle ranking" id="rankTecnicos">
+                        <thead><tr><th>#</th><th>Técnico</th><th class="text-end">Atendidos</th><th class="text-end">Tempo médio</th><th class="text-end">SLA</th><th class="text-end">Avaliação</th></tr></thead>
+                        <tbody><tr><td colspan="6" class="text-secondary">Carregando…</td></tr></tbody>
+                    </table>
+                </div>
+            </article>
+        </section>
+
+        <section class="grid-1-2">
+            <article class="card-viz">
+                <header class="card-viz-header">
+                    <div><h2>Por prioridade</h2><p>Chamados abertos no período</p></div>
+                </header>
+                <div class="chart-box chart-sm"><canvas id="chartPrioridade" aria-label="Gráfico por prioridade"></canvas></div>
+            </article>
+            <article class="card-viz">
+                <header class="card-viz-header">
+                    <div><h2>Por setor solicitante</h2><p>Chamados abertos no período</p></div>
+                </header>
+                <div class="chart-box chart-sm"><canvas id="chartSetor" aria-label="Gráfico por setor"></canvas></div>
+            </article>
+        </section>
+
+        <!-- Status e consideracoes tecnicas mais recentes -->
+        <article class="card-viz">
+            <header class="card-viz-header">
+                <div>
+                    <h2>Últimas atualizações e considerações técnicas</h2>
+                    <p>10 chamados mais recentes dentro dos filtros</p>
+                </div>
+                <a class="btn btn-sm btn-link" th:href="@{/chamados}" href="#">Ver todos os chamados</a>
+            </header>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle" id="tabRecentes">
+                    <thead><tr><th>Protocolo</th><th>Título</th><th>Status</th><th>Prioridade</th><th>Técnico</th><th>Consideração técnica</th><th class="text-end">Abertura</th></tr></thead>
+                    <tbody><tr><td colspan="7" class="text-secondary">Carregando…</td></tr></tbody>
+                </table>
+            </div>
+        </article>
+    </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script th:src="@{/js/dashboard.js}" src="../static/js/dashboard.js"></script>
+</body>
+</html>
