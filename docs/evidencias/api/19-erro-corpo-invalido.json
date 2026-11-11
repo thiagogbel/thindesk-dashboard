@@ -1,0 +1,1 @@
+{"timestamp":"2026-11-11T20:09:16.149003800Z","status":400,"erro":"Bad Request","mensagem":"Dados da requisição inválidos","caminho":"/api/v1/chamados","detalhes":["clienteId: clienteId é obrigatório","prioridade: prioridade é obrigatória","tipo: tipo é obrigatório","titulo: titulo é obrigatório"]}

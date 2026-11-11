@@ -1,0 +1,1 @@
+{"timestamp":"2026-11-11T20:09:13.453030800Z","status":400,"erro":"Bad Request","mensagem":"Valor inválido para o parâmetro 'inicio': 31-12-2026","caminho":"/api/v1/dashboard/resumo","detalhes":[]}

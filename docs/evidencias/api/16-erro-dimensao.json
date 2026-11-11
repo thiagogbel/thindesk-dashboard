@@ -1,0 +1,1 @@
+{"timestamp":"2026-11-11T20:09:14.559971500Z","status":400,"erro":"Bad Request","mensagem":"Dimensão inválida: 'cor'. Use prioridade, setor, canal ou tipo","caminho":"/api/v1/dashboard/distribuicao/cor","detalhes":[]}
