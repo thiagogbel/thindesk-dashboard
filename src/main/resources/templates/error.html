@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{fragments/layout :: head('Erro')}"></head>
+<body class="auth-page">
+<main class="auth-card">
+    <h1 class="display-6" th:text="${status}">404</h1>
+    <p class="text-secondary" th:text="${status == 404} ? 'Página não encontrada.' : 'Não foi possível processar a solicitação.'">Página não encontrada.</p>
+    <a class="btn btn-primary" th:href="@{/}" href="#">Voltar ao início</a>
+</main>
+</body>
+</html>

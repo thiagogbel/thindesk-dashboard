@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{fragments/layout :: head('Login')}"></head>
+<body class="auth-page">
+<main class="auth-card">
+    <img th:src="@{/images/logo.png}" src="../static/images/logo.png" alt="Thindesk" class="auth-logo">
+    <h1 class="h4 mb-1">Thindesk</h1>
+    <p class="text-secondary mb-4">Sistema de chamados técnicos</p>
+
+    <div class="alert alert-danger py-2" th:if="${param.error}">Usuário ou senha inválidos.</div>
+    <div class="alert alert-success py-2" th:if="${param.logout}">Você saiu do sistema.</div>
+    <div class="alert alert-success py-2" th:if="${param.cadastrado}">Cadastro realizado. Faça login.</div>
+
+    <form th:action="@{/login}" method="post" class="text-start">
+        <div class="mb-3">
+            <label for="username" class="form-label">Usuário</label>
+            <input type="text" class="form-control" id="username" name="username" autocomplete="username" required autofocus>
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label">Senha</label>
+            <input type="password" class="form-control" id="password" name="password" autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Entrar</button>
+    </form>
+    <a class="d-block mt-3 small" th:href="@{/cadastro}" href="#">Ainda não tem conta? Cadastre-se</a>
+</main>
+</body>
+</html>
