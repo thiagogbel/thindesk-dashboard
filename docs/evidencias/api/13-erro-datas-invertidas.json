@@ -1,0 +1,1 @@
+{"timestamp":"2026-11-11T20:09:12.971327700Z","status":400,"erro":"Bad Request","mensagem":"A data inicial (2026-12-01) não pode ser maior que a data final (2026-01-01)","caminho":"/api/v1/dashboard/resumo","detalhes":[]}

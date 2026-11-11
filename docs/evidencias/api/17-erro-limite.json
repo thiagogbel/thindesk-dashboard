@@ -1,0 +1,1 @@
+{"timestamp":"2026-11-11T20:09:15.052901100Z","status":400,"erro":"Bad Request","mensagem":"O parâmetro 'limite' deve estar entre 1 e 50","caminho":"/api/v1/dashboard/tipos","detalhes":[]}
