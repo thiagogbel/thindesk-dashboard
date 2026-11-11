@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{fragments/layout :: head('Chamados')}"></head>
+<body>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+    <main class="content">
+        <header class="page-header">
+            <div>
+                <h1 class="h4 mb-0">Chamados</h1>
+                <p class="text-secondary small mb-0"
+                   th:text="${#numbers.formatInteger(resultado.totalElementos(), 1, 'POINT')} + ' chamados encontrados'">30.000 chamados encontrados</p>
+            </div>
+        </header>
+
+        <div class="alert alert-success py-2" th:if="${param.ok}">Status atualizado. O dashboard já reflete a alteração.</div>
+        <div class="alert alert-danger py-2" th:if="${param.erro}" th:text="${param.erro}">Erro</div>
+
+        <form class="filter-bar" method="get" th:action="@{/chamados}">
+            <label class="filter-field">Buscar
+                <input class="form-control form-control-sm" name="busca" th:value="${busca}" placeholder="Protocolo, título ou solicitante">
+            </label>
+            <label class="filter-field">Status
+                <select name="status" class="form-select form-select-sm">
+                    <option value="">Todos</option>
+                    <option th:each="s : ${todosStatus}" th:value="${s.name()}" th:text="${s.label}"
+                            th:selected="${s == statusSelecionado}">Aberto</option>
+                </select>
+            </label>
+            <label class="filter-field">Tipo
+                <select name="tipo" class="form-select form-select-sm">
+                    <option value="">Todos</option>
+                    <option th:each="t : ${tipos}" th:value="${t}" th:text="${t}" th:selected="${t == tipo}">Hardware</option>
+                </select>
+            </label>
+            <div class="filter-actions"><button class="btn btn-sm btn-primary" type="submit">Filtrar</button></div>
+        </form>
+
+        <article class="card-viz">
+            <div class="table-responsive">
+                <table class="table table-sm align-middle">
+                    <thead>
+                    <tr><th>Protocolo</th><th>Título</th><th>Tipo</th><th>Status</th><th>Prioridade</th><th>Técnico</th><th>Solicitante</th><th>Abertura</th><th>Atualizar status</th></tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${resultado.conteudo().isEmpty()}"><td colspan="9" class="text-secondary">Nenhum chamado encontrado para os filtros.</td></tr>
+                    <tr th:each="c : ${resultado.conteudo()}">
+                        <td class="font-monospace small" th:text="${c.protocolo}">TD-2026-000001</td>
+                        <td>
+                            <div th:text="${c.titulo}">Título</div>
+                            <div class="small text-secondary text-truncate" style="max-width: 280px"
+                                 th:if="${c.consideracaoTecnica}" th:title="${c.consideracaoTecnica}"
+                                 th:text="${c.consideracaoTecnica}">Consideração técnica</div>
+                        </td>
+                        <td class="small" th:text="${c.tipo}">Hardware</td>
+                        <td><span class="badge-status" th:classappend="${'st-' + c.status}" th:text="${c.status?.label}">Aberto</span></td>
+                        <td class="small" th:text="${c.prioridade?.label}">Média</td>
+                        <td class="small" th:text="${c.tecnico} ?: 'Não atribuído'">Técnico</td>
+                        <td class="small" th:text="${c.usuario}">Solicitante</td>
+                        <td class="small text-nowrap" th:text="${@fmt.dataHora(c.dataAbertura)}">01/01/2026</td>
+                        <td>
+                            <form th:if="${!c.status.proximosPermitidos().isEmpty()}" class="d-flex gap-1"
+                                  method="post" th:action="@{/chamados/{id}/status(id=${c.id})}">
+                                <select name="status" class="form-select form-select-sm" style="width: 9rem">
+                                    <option th:each="p : ${c.status.proximosPermitidos()}" th:value="${p.name()}" th:text="${p.label}">Em andamento</option>
+                                </select>
+                                <input name="consideracaoTecnica" class="form-control form-control-sm" placeholder="Consideração técnica" style="width: 12rem">
+                                <button class="btn btn-sm btn-outline-primary" type="submit" title="Salvar"><i class="bi bi-check2"></i></button>
+                            </form>
+                            <span th:if="${c.status.proximosPermitidos().isEmpty()}" class="small text-secondary">Finalizado</span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <nav class="d-flex justify-content-between align-items-center" th:if="${resultado.totalPaginas() > 1}">
+                <span class="small text-secondary" th:text="|Página ${resultado.pagina() + 1} de ${resultado.totalPaginas()}|">Página 1 de 10</span>
+                <div class="btn-group btn-group-sm">
+                    <a class="btn btn-outline-secondary" th:classappend="${resultado.pagina() == 0} ? 'disabled'"
+                       th:href="@{/chamados(pagina=${resultado.pagina() - 1}, busca=${busca}, tipo=${tipo}, status=${statusSelecionado})}">Anterior</a>
+                    <a class="btn btn-outline-secondary" th:classappend="${resultado.pagina() + 1 >= resultado.totalPaginas()} ? 'disabled'"
+                       th:href="@{/chamados(pagina=${resultado.pagina() + 1}, busca=${busca}, tipo=${tipo}, status=${statusSelecionado})}">Próxima</a>
+                </div>
+            </nav>
+        </article>
+    </main>
+</div>
+</body>
+</html>

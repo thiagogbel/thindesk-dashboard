@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{fragments/layout :: head('Clientes')}"></head>
+<body>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+    <main class="content">
+        <header class="page-header">
+            <div>
+                <h1 class="h4 mb-0">Clientes</h1>
+                <p class="text-secondary small mb-0"
+                   th:text="${#numbers.formatInteger(resultado.totalElementos(), 1, 'POINT')} + ' clientes'">1.500 clientes</p>
+            </div>
+        </header>
+        <form class="filter-bar" method="get" th:action="@{/clientes}">
+            <label class="filter-field">Nome
+                <input class="form-control form-control-sm" name="nome" th:value="${nome}" placeholder="Buscar por nome">
+            </label>
+            <div class="filter-actions"><button class="btn btn-sm btn-primary" type="submit">Buscar</button></div>
+        </form>
+        <article class="card-viz">
+            <div class="table-responsive">
+                <table class="table table-sm align-middle">
+                    <thead><tr><th>Nome</th><th>E-mail</th><th>Telefone</th><th>Setor</th><th>Unidade</th></tr></thead>
+                    <tbody>
+                    <tr th:each="c : ${resultado.conteudo()}">
+                        <td th:text="${c.nome}">Nome</td>
+                        <td class="small" th:text="${c.email}">email</td>
+                        <td class="small text-nowrap" th:text="${c.telefone}">telefone</td>
+                        <td class="small" th:text="${c.setor}">setor</td>
+                        <td class="small" th:text="${c.unidade}">unidade</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <nav class="d-flex justify-content-between align-items-center" th:if="${resultado.totalPaginas() > 1}">
+                <span class="small text-secondary" th:text="|Página ${resultado.pagina() + 1} de ${resultado.totalPaginas()}|">Página 1</span>
+                <div class="btn-group btn-group-sm">
+                    <a class="btn btn-outline-secondary" th:classappend="${resultado.pagina() == 0} ? 'disabled'"
+                       th:href="@{/clientes(pagina=${resultado.pagina() - 1}, nome=${nome})}">Anterior</a>
+                    <a class="btn btn-outline-secondary" th:classappend="${resultado.pagina() + 1 >= resultado.totalPaginas()} ? 'disabled'"
+                       th:href="@{/clientes(pagina=${resultado.pagina() + 1}, nome=${nome})}">Próxima</a>
+                </div>
+            </nav>
+        </article>
+    </main>
+</div>
+</body>
+</html>

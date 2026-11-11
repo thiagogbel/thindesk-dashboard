@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{fragments/layout :: head('Cadastro')}"></head>
+<body class="auth-page">
+<main class="auth-card">
+    <h1 class="h4 mb-1">Criar conta</h1>
+    <p class="text-secondary mb-4">Novas contas recebem o perfil de usuário (técnico).</p>
+
+    <div class="alert alert-danger py-2" th:if="${param.existe}">Esse nome de usuário já existe.</div>
+    <div class="alert alert-danger py-2" th:if="${param.senhaCurta}">A senha precisa ter pelo menos 8 caracteres.</div>
+    <div class="alert alert-danger py-2" th:if="${param.invalido}">Usuário deve ter 3 a 30 caracteres (letras, números, ponto, hífen).</div>
+
+    <form th:action="@{/cadastro}" method="post" class="text-start">
+        <div class="mb-3">
+            <label class="form-label" for="nome">Nome</label>
+            <input class="form-control" id="nome" name="nome" type="text">
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="username">Usuário</label>
+            <input class="form-control" id="username" name="username" type="text" required pattern="[A-Za-z0-9._\-]{3,30}">
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="password">Senha</label>
+            <input class="form-control" id="password" name="password" type="password" minlength="8" required>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Cadastrar</button>
+    </form>
+    <a class="d-block mt-3 small" th:href="@{/login}" href="#">Voltar ao login</a>
+</main>
+</body>
+</html>

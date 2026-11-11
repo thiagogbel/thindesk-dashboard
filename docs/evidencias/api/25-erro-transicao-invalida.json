@@ -1,0 +1,1 @@
+{"timestamp":"2026-11-11T20:09:20.568576200Z","status":422,"erro":"Unprocessable Entity","mensagem":"Transição de status não permitida: Fechado → Aberto. Permitidas: []","caminho":"/api/v1/chamados/6af4cb6d935df097ca9c6c21/status","detalhes":[]}
